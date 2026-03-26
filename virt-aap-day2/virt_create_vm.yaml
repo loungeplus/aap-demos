@@ -15,7 +15,7 @@
     - name: Get an existing VirtualMachine
       redhat.openshift_virtualization.kubevirt_vm_info:
         name: "{{ vm_name }}"
-        namespace: rhsc2025-aap
+        namespace: vm-auto
       register: default_testvm
 
     - debug: var=default_testvm
@@ -24,7 +24,7 @@
       redhat.openshift_virtualization.kubevirt_vm:
         state: present
         name: "{{ vm_name }}"
-        namespace: rhsc2025-aap
+        namespace: vm-auto
         labels:
           app: "{{ vm_name }}"
         data_volume_templates:
