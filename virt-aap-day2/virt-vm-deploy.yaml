@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    target_os_type: ""
+    vm_name: ""
+    namespace: ""
+    
+  tasks:
+    #- name: Generate header string
+    #  ansible.builtin.set_fact:
+    #    uniq_id_str: "{{ lookup('community.general.random_string', upper=false, numbers=false, special=false) }}"
+
+    #- name: Generate VM name
+    #  ansible.builtin.set_fact:
+    #    vm_name: "{{ target_os_type }}-{{ uniq_id_str }}"
+
+    - name: Get an existing VirtualMachine
+      redhat.openshift_virtualization.kubevirt_vm_info:
+        name: "{{ vm_name }}"
+        namespace: "{{ vm_namespace }}"
+      register: default_testvm
+
+    - debug: var=default_testvm
+      
+    - name: Create a VirtualMachine with a DataVolume template
+      redhat.openshift_virtualization.kubevirt_vm:
+        state: present
+        name: "{{ vm_name }}"
+        namespace: "{{ vm_namespace }}"
+        labels:
+          app: "{{ vm_name }}"
+        data_volume_templates:
+          - metadata:
+              name: "{{ vm_name }}"
+            spec:
+              sourceRef:
+                kind: DataSource
+                name: "{{ target_os_type }}"
+                namespace: openshift-virtualization-os-images
+              storage:
+                resources:
+                  requests:
+                    storage: 30Gi
+        spec:
+          domain:
+            resources:
+              requests:
+                memory: 2Gi
+            devices:
+              disks:
+                - name: disk0
+                  disk:
+                    bus: virtio
+          volumes:
+            - name: disk0
+              dataVolume:
+                name: "{{ vm_name }}"
